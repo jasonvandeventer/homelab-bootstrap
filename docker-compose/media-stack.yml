@@ -1,0 +1,124 @@
+version: "3.8"
+
+networks:
+  media_net:
+    driver: bridge
+
+services:
+  # Reverse Proxy Manager
+  nginx-proxy-manager:
+    image: jc21/nginx-proxy-manager:latest
+    container_name: npm
+    restart: unless-stopped
+    ports:
+      - "80:80"
+      - "81:81"
+      - "443:443"
+    volumes:
+      - /mnt/ssd_cache/npm/data:/data
+      - /mnt/ssd_cache/npm/letsencrypt:/etc/letsencrypt
+    networks:
+      - media_net
+
+  # Plex Media Server
+  plex:
+    image: lscr.io/linuxserver/plex:latest
+    container_name: plex
+    restart: unless-stopped
+    environment:
+      - PUID=1000
+      - PGID=1000
+      - VERSION=docker
+      # Add your Plex claim token for auto-login (optional)
+      - PLEX_CLAIM=claim-NDDr4Emxt7qYTzPMCEx-
+    devices:
+      - /dev/dri:/dev/dri # GPU for HW transcoding
+    volumes:
+      - /mnt/ssd_cache/plex:/config
+      - /mnt/media_library:/data/media
+    network_mode: host # Plex benefits from host mode
+
+  # SABnzbd (Usenet Downloader)
+  sabnzbd:
+    image: lscr.io/linuxserver/sabnzbd:latest
+    container_name: sabnzbd
+    restart: unless-stopped
+    environment:
+      - PUID=1000
+      - PGID=1000
+      - TZ=America/Chicago
+    ports:
+      - "8080:8080"
+    volumes:
+      - /mnt/ssd_cache/sabnzbd:/config
+      - /mnt/downloads:/downloads
+      - /mnt/media_library:/media
+    networks:
+      - media_net
+
+  # Radarr (Movies)
+  radarr:
+    image: lscr.io/linuxserver/radarr:latest
+    container_name: radarr
+    restart: unless-stopped
+    environment:
+      - PUID=1000
+      - PGID=1000
+      - TZ=America/Chicago
+    ports:
+      - "7878:7878"
+    volumes:
+      - /mnt/ssd_cache/radarr:/config
+      - /mnt/media_library/movies:/movies
+      - /mnt/downloads:/downloads
+    networks:
+      - media_net
+
+  # Sonarr (TV)
+  sonarr:
+    image: lscr.io/linuxserver/sonarr:latest
+    container_name: sonarr
+    restart: unless-stopped
+    environment:
+      - PUID=1000
+      - PGID=1000
+      - TZ=America/Chicago
+    ports:
+      - "8989:8989"
+    volumes:
+      - /mnt/ssd_cache/sonarr:/config
+      - /mnt/media_library/tv:/tv
+      - /mnt/downloads:/downloads
+    networks:
+      - media_net
+
+  # Bazarr (Subtitles)
+  bazarr:
+    image: lscr.io/linuxserver/bazarr:latest
+    container_name: bazarr
+    restart: unless-stopped
+    environment:
+      - PUID=1000
+      - PGID=1000
+      - TZ=America/Chicago
+    ports:
+      - "6767:6767"
+    volumes:
+      - /mnt/ssd_cache/bazarr:/config
+      - /mnt/media_library/movies:/movies
+      - /mnt/media_library/tv:/tv
+    networks:
+      - media_net
+
+  # Portainer (UI for Docker)
+  portainer:
+    image: portainer/portainer-ce:latest
+    container_name: portainer
+    restart: unless-stopped
+    ports:
+      - "9000:9000"
+    volumes:
+      - /var/run/docker.sock:/var/run/docker.sock
+      - /mnt/ssd_cache/portainer:/data
+    networks:
+      - media_net
