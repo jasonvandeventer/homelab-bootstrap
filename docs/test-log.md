@@ -6,9 +6,9 @@ This file tracks test runs for the Phase 1 media stack bootstrap.
 
 ## ✅ Initial Test Run
 
-**Date:** _<add date here>_  
+**Date:** 2025-07-17 
 **System:** Proxmox on NVMe  
-**Repo Commit:** `<commit hash>`
+**Repo Commit:** a00364e
 
 **Steps Run:**
 1. `./bootstrap.sh`
