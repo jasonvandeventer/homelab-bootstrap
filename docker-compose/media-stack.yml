@@ -30,7 +30,7 @@ services:
       - PGID=1000
       - VERSION=docker
       # Add your Plex claim token for auto-login (optional)
-      - PLEX_CLAIM=claim-NDDr4Emxt7qYTzPMCEx-
+      # - PLEX_CLAIM=claim-NDDr4Emxt7qYTzPMCEx-
     devices:
       - /dev/dri:/dev/dri # GPU for HW transcoding
     volumes:
@@ -122,3 +122,36 @@ services:
       - /mnt/ssd_cache/portainer:/data
     networks:
       - media_net
+
+  # Lidarr (Music)
+  lidarr:
+    image: lscr.io/linuxserver/lidarr:latest
+    container_name: lidarr
+    restart: unless-stopped
+    environment:
+      - PUID=1000
+      - PGID=1000
+      - TZ=America/Chicago
+    ports:
+      - "8686:8686"
+    volumes:
+      - /mnt/ssd_cache/lidarr:/config
+      - /mnt/downloads:/downloads
+      - /mnt/media_library/music:/music
+    networks:
+      - media_net
+
+  # QBittorrent (Torrent download client)
+  qbittorrent:
+    image: lscr.io/linuxserver/qbittorrent:latest
+    container_name: qbittorrent
+    restart: unless-stopped
+    ports:
+      - "8081:8080"
+    volumes:
+      - /mnt/ssd_cache/qbittorrent:/config
+      - /mnt/downloads:/downloads
+    environment:
+      - PUID=1000
+      - PGID=1000
+      - TZ=America/Chicago
